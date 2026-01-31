@@ -7,43 +7,31 @@ using ExchangeRate.Core.Interfaces.Providers;
 
 namespace ExchangeRate.Core
 {
-    class ExchangeRateProviderFactory : IExchangeRateProviderFactory
+    public class ExchangeRateProviderFactory : IExchangeRateProviderFactory
     {
-        private readonly List<IExchangeRateProvider> _exchangeRateProviders;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly Dictionary<ExchangeRateSources, IExchangeRateProvider> _providers;
 
-        public ExchangeRateProviderFactory(IEnumerable<IExchangeRateProvider> exchangeRateProviders, IServiceProvider serviceProvider)
+        public ExchangeRateProviderFactory(IEnumerable<IExchangeRateProvider> exchangeRateProviders)
         {
-            _exchangeRateProviders = exchangeRateProviders.ToList();
-            _serviceProvider = serviceProvider;
+            _providers = exchangeRateProviders.ToDictionary(x => x.Source);
         }
 
         public IExchangeRateProvider GetExchangeRateProvider(ExchangeRateSources source)
         {
-            var provider = _exchangeRateProviders.FirstOrDefault(x => x.Source == source);
-
-            if (provider is null)
+            if (!_providers.TryGetValue(source, out var provider))
             {
                 throw new NotSupportedException($"Source {source} is not supported.");
             }
 
-            return (IExchangeRateProvider)_serviceProvider.GetService(provider.GetType());
+            return provider;
         }
 
         public bool TryGetExchangeRateProviderByCurrency(CurrencyTypes currency, out IExchangeRateProvider provider)
-        {
-            var providerType = _exchangeRateProviders.FirstOrDefault(x => x.Currency == currency)?.GetType();
-
-            if (providerType is null)
-            {
-                provider = null;
-                return false;
-            }
-
-            provider = (IExchangeRateProvider)_serviceProvider.GetService(providerType);
-            return true;
+        {         
+            provider = _providers.Values.FirstOrDefault(x => x.Currency == currency);            
+            return provider != null;
         }
 
-        public IEnumerable<ExchangeRateSources> ListExchangeRateSources() => _exchangeRateProviders.Select(x => x.Source);
+        public IEnumerable<ExchangeRateSources> ListExchangeRateSources() => _providers.Keys;
     }
 }
