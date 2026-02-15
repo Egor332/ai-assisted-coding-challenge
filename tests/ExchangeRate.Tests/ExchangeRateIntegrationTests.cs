@@ -1263,9 +1263,12 @@ public class ExchangeRateApiFactory : WebApplicationFactory<Program>
                 .WithBody(ratesJson));
 
         // Setup TimeSeries endpoint (used for historical data)
+        // Relaxed matching for startPeriod/endPeriod to support optimization that fetches whole month
         _wireMockServer
             .Given(Request.Create()
                 .WithPath("/v1/Banks/EUECB/DailyRates/TimeSeries")
+                .WithParam("startPeriod", new WireMock.Matchers.RegexMatcher(".*"))
+                .WithParam("endPeriod", new WireMock.Matchers.RegexMatcher(".*"))
                 .UsingGet())
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
@@ -1278,9 +1281,12 @@ public class ExchangeRateApiFactory : WebApplicationFactory<Program>
         var ratesJson = BuildRatesJson("EUECB", "EUR", "Indirect", ratesByDate);
 
         // Setup TimeSeries endpoint
+        // Relaxed matching for startPeriod/endPeriod to support optimization that fetches whole month
         _wireMockServer
             .Given(Request.Create()
                 .WithPath("/v1/Banks/EUECB/DailyRates/TimeSeries")
+                .WithParam("startPeriod", new WireMock.Matchers.RegexMatcher(".*"))
+                .WithParam("endPeriod", new WireMock.Matchers.RegexMatcher(".*"))
                 .UsingGet())
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
