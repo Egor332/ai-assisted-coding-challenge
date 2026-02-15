@@ -41,6 +41,9 @@ namespace ExchangeRate.Core.Services
             
             // Upsert: Overwrite if exists (Last write wins)
             dateDict[rate.Date.Value.Date] = rate.Rate.Value;
+
+            // Track min date
+            UpdateMinDate(rate.Source.Value, rate.Frequency.Value, rate.Date.Value.Date);
         }
 
         public void SetRates(IEnumerable<Entities.ExchangeRate> rates)

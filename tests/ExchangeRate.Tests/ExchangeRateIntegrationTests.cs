@@ -1267,8 +1267,8 @@ public class ExchangeRateApiFactory : WebApplicationFactory<Program>
         _wireMockServer
             .Given(Request.Create()
                 .WithPath("/v1/Banks/EUECB/DailyRates/TimeSeries")
-                .WithParam("startPeriod", new WireMock.Matchers.RegexMatcher(".*"))
-                .WithParam("endPeriod", new WireMock.Matchers.RegexMatcher(".*"))
+                .WithParam("startDate", new WireMock.Matchers.RegexMatcher(".*"))
+                .WithParam("endDate", new WireMock.Matchers.RegexMatcher(".*"))
                 .UsingGet())
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
@@ -1285,8 +1285,8 @@ public class ExchangeRateApiFactory : WebApplicationFactory<Program>
         _wireMockServer
             .Given(Request.Create()
                 .WithPath("/v1/Banks/EUECB/DailyRates/TimeSeries")
-                .WithParam("startPeriod", new WireMock.Matchers.RegexMatcher(".*"))
-                .WithParam("endPeriod", new WireMock.Matchers.RegexMatcher(".*"))
+                .WithParam("startDate", new WireMock.Matchers.RegexMatcher(".*"))
+                .WithParam("endDate", new WireMock.Matchers.RegexMatcher(".*"))
                 .UsingGet())
             .RespondWith(Response.Create()
                 .WithStatusCode(200)

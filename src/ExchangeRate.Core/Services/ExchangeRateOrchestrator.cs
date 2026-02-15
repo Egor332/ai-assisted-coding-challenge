@@ -55,11 +55,6 @@ namespace ExchangeRate.Core.Services
                 var provider = _providerFactory.GetExchangeRateProvider(source);
                 var providerCurrency = provider.Currency;
                 
-                // Determine which currency is the "Target" (Lookup) currency in our storage.
-                // Storage Key is always the currency that is NOT the provider's base currency.
-                // E.g. ECB (Base EUR). Pair EUR/USD. Storage Key = USD. Rate = 1.08.
-                // E.g. MXCB (Base MXN). Pair USD/MXN. Storage Key = USD. Rate = 17.5.
-                
                 // If neither currency is the provider currency, it's a cross-rate via the provider currency.
                 if (fromCurrency != providerCurrency && toCurrency != providerCurrency)
                 {
@@ -79,7 +74,16 @@ namespace ExchangeRate.Core.Services
                 }
 
                 // If one of them IS the provider currency, we have a direct lookup.
-                var lookupCurrency = (toCurrency == providerCurrency) ? fromCurrency : toCurrency;
+                CurrencyTypes lookupCurrency;
+                if (toCurrency == providerCurrency)
+                {
+                    lookupCurrency = fromCurrency;
+                }
+                else
+                {
+                    lookupCurrency = toCurrency;
+                }
+                
                 
                 // Find the raw rate for the lookup currency
                 var fxRate = await FindFxRateAsync(lookupCurrency, date, source, frequency);
@@ -121,7 +125,6 @@ namespace ExchangeRate.Core.Services
 
         private async Task<decimal?> FindFxRateAsync(CurrencyTypes lookupCurrency, DateTime date, ExchangeRateSources source, ExchangeRateFrequencies frequency)
         {
-            // First, ensure we have data for the requested period.
             // Check Cache first for EXACT date
              var cachedExact = _cache.TryGetRate(lookupCurrency, date, source, frequency);
              if (cachedExact.HasValue) return cachedExact.Value;
