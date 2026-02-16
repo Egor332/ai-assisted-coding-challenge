@@ -988,7 +988,7 @@ public class ExchangeRateIntegrationTests : IDisposable
     /// Tests that very old date with no available data returns an error response.
     /// NOTE: The exact response code depends on implementation - could be 404 or 500.
     /// </summary>
-    [Fact(Skip = "Response varies by implementation - enable after implementing proper error handling")]
+    [Fact]
     public async Task GetRate_VeryOldDateNoData_ReturnsNotFound()
     {
         // Arrange
@@ -1263,9 +1263,12 @@ public class ExchangeRateApiFactory : WebApplicationFactory<Program>
                 .WithBody(ratesJson));
 
         // Setup TimeSeries endpoint (used for historical data)
+        // Relaxed matching for startPeriod/endPeriod to support optimization that fetches whole month
         _wireMockServer
             .Given(Request.Create()
                 .WithPath("/v1/Banks/EUECB/DailyRates/TimeSeries")
+                .WithParam("startDate", new WireMock.Matchers.RegexMatcher(".*"))
+                .WithParam("endDate", new WireMock.Matchers.RegexMatcher(".*"))
                 .UsingGet())
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
@@ -1278,9 +1281,12 @@ public class ExchangeRateApiFactory : WebApplicationFactory<Program>
         var ratesJson = BuildRatesJson("EUECB", "EUR", "Indirect", ratesByDate);
 
         // Setup TimeSeries endpoint
+        // Relaxed matching for startPeriod/endPeriod to support optimization that fetches whole month
         _wireMockServer
             .Given(Request.Create()
                 .WithPath("/v1/Banks/EUECB/DailyRates/TimeSeries")
+                .WithParam("startDate", new WireMock.Matchers.RegexMatcher(".*"))
+                .WithParam("endDate", new WireMock.Matchers.RegexMatcher(".*"))
                 .UsingGet())
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
