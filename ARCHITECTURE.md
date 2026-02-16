@@ -101,3 +101,4 @@ sequenceDiagram
 2.  **Stateless Components**: Services are registered as Singletons, promoting efficiency and forcing thread-safe designs.
 3.  **Optimization First**: The "Fetch Month" strategy was chosen over "Fetch Day" to reduce latency and API quotas for typical use cases (generating reports, filling history).
 4.  **Resilience**: The system gracefully handles future dates (by using the latest available data) and holidays (by looking back).
+5.  **Factory Refactoring**: Switched `ExchangeRateProviderFactory` from `Reflection`-based instantiation to a `Dictionary`-based lookup. This improves performance (no runtime reflection cost) and type safety (compile-time checking of providers).
