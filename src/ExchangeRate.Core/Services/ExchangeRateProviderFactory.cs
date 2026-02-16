@@ -5,7 +5,7 @@ using ExchangeRate.Core.Enums;
 using ExchangeRate.Core.Interfaces;
 using ExchangeRate.Core.Interfaces.Providers;
 
-namespace ExchangeRate.Core
+namespace ExchangeRate.Core.Services
 {
     public class ExchangeRateProviderFactory : IExchangeRateProviderFactory
     {

@@ -1,5 +1,4 @@
 using ExchangeRate.Api.Infrastructure;
-using ExchangeRate.Core;
 using ExchangeRate.Core.Enums;
 using ExchangeRate.Core.Infrastructure;
 using ExchangeRate.Core.Interfaces;
@@ -7,6 +6,8 @@ using ExchangeRate.Core.Interfaces.Providers;
 using ExchangeRate.Core.Models;
 using ExchangeRate.Core.Providers;
 using ExchangeRate.Core.Services;
+
+using ExchangeRate.Api.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,45 +54,9 @@ builder.Services.AddSingleton<IExchangeRateOrchestrator, ExchangeRateOrchestrato
 
 var app = builder.Build();
 
-// GET /api/rates?from={currency}&to={currency}&date={date}&source={source}&frequency={frequency}
-app.MapGet("/api/rates", async (
-    string from,
-    string to,
-    DateTime date,
-    ExchangeRateSources source,
-    ExchangeRateFrequencies frequency,
-    IExchangeRateOrchestrator orchestrator) =>
-{
-    try 
-    {
-        var rate = await orchestrator.GetRateAsync(from, to, date, source, frequency);
-
-        if (rate == null)
-        {
-            return Results.NotFound(new { error = $"No exchange rate found for {from} to {to} on {date:yyyy-MM-dd}" });
-        }
-
-        return Results.Ok(new ExchangeRateResponse(from, to, date, source.ToString(), frequency.ToString(), rate.Value));
-    }
-    catch (Exception ex)
-    {
-        // Simple global error handling for now
-        return Results.Problem(detail: ex.Message, statusCode: 500);
-    }
-});
+app.MapExchangeRateEndpoints();
 
 app.Run();
-
-/// <summary>
-/// Response model for the exchange rate API endpoint.
-/// </summary>
-public record ExchangeRateResponse(
-    string FromCurrency,
-    string ToCurrency,
-    DateTime Date,
-    string Source,
-    string Frequency,
-    decimal Rate);
 
 // Make Program accessible to test project
 public partial class Program { }
