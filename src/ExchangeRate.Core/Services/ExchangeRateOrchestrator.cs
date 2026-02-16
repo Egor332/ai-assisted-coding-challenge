@@ -54,8 +54,12 @@ namespace ExchangeRate.Core.Services
             {
                 var provider = _providerFactory.GetExchangeRateProvider(source);
                 var providerCurrency = provider.Currency;
+
+                // 1. Check Pegged currencies FIRST before potentially expensive provider lookups
+                var peggedRate = await GetPeggedRateAsync(fromCurrency, toCurrency, date, source, frequency, provider);
+                if (peggedRate.HasValue) return peggedRate.Value;
                 
-                // If neither currency is the provider currency, it's a cross-rate via the provider currency.
+                // 2. If neither currency is the provider currency, it's a cross-rate via the provider currency.
                 if (fromCurrency != providerCurrency && toCurrency != providerCurrency)
                 {
                     // Calculate Cross Rate: From -> Base -> To
@@ -67,13 +71,10 @@ namespace ExchangeRate.Core.Services
                         return fromToBase.Value * baseToTo.Value;
                     }
                     
-                    // Fallback to Pegged calculation if direct cross rate failed?
-                    // The legacy code had complex Pegged logic mixed in `GetFxRate`.
-                    // Let's check Pegged currencies if direct provider fetch fails.
-                    return await GetPeggedRateAsync(fromCurrency, toCurrency, date, source, frequency, provider);
+                    return null;
                 }
 
-                // If one of them IS the provider currency, we have a direct lookup.
+                // 3. If one of them IS the provider currency, we have a direct lookup.
                 CurrencyTypes lookupCurrency;
                 if (toCurrency == providerCurrency)
                 {
@@ -83,7 +84,6 @@ namespace ExchangeRate.Core.Services
                 {
                     lookupCurrency = toCurrency;
                 }
-                
                 
                 // Find the raw rate for the lookup currency
                 var fxRate = await FindFxRateAsync(lookupCurrency, date, source, frequency);
@@ -96,9 +96,6 @@ namespace ExchangeRate.Core.Services
                        - Direct exchange rate: 1 USD = 0.92819 EUR
                        - Indirect exchange rate: 1 EUR = 1.08238 USD
                     */
-                    // ExchangeRate entity stores `Rate` value.
-                    // If QuoteType is Direct: 1 Lookup = X Base.
-                    // If QuoteType is Indirect: 1 Base = X Lookup.
                     
                     return provider.QuoteType switch
                     {
@@ -112,9 +109,7 @@ namespace ExchangeRate.Core.Services
                     };
                 }
                 
-                // If not found, try Pegged logic again?
-                return await GetPeggedRateAsync(fromCurrency, toCurrency, date, source, frequency, provider);
-
+                return null;
             }
             catch (Exception ex)
             {
